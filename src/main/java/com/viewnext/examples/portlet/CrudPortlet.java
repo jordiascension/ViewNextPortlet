@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.util.Hashtable;
 import java.util.Vector;
 
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
 
 import javax.portlet.ActionRequest;
@@ -18,6 +20,8 @@ import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
 import org.osgi.service.component.annotations.Component;
+
+
 
 /**
  * @author admin
@@ -38,6 +42,8 @@ import org.osgi.service.component.annotations.Component;
 	service = Portlet.class
 )
 public class CrudPortlet extends MVCPortlet {
+	
+	private static Log _log = LogFactoryUtil.getLog(CrudPortlet.class.getName());
 	
 	private static Vector<Hashtable<String,String>> FACTURAS=
 			new Vector<Hashtable<String,String>>();
@@ -70,6 +76,7 @@ public class CrudPortlet extends MVCPortlet {
 
 		if ((jspPage = renderRequest.getParameter("jspPage")) != null) {
 			if (jspPage.equals("/list.jsp")) {
+				_log.info("Ha entrado en la redireccion de facturas");
 				renderRequest.setAttribute("facturas", FACTURAS);
 			}
 		}
