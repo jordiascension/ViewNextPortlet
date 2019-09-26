@@ -3,12 +3,16 @@ package com.viewnext.examples.portlet;
 import com.viewnext.examples.constants.CrudPortletKeys;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Hashtable;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCPortlet;
+import com.liferay.portal.kernel.servlet.HttpHeaders;
+import com.liferay.portal.kernel.io.OutputStreamWriter;
 
 import javax.portlet.ActionRequest;
 import javax.portlet.ActionResponse;
@@ -19,6 +23,8 @@ import javax.portlet.RenderResponse;
 import javax.portlet.ResourceRequest;
 import javax.portlet.ResourceResponse;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.osgi.service.component.annotations.Component;
 
 
@@ -87,7 +93,31 @@ public class CrudPortlet extends MVCPortlet {
 	public void serveResource(ResourceRequest resourceRequest, ResourceResponse resourceResponse)
 			throws IOException, PortletException {
 		// TODO Auto-generated method stub
-		super.serveResource(resourceRequest, resourceResponse);
+		// Agregamos las librerías a gradle para exportar a csv
+				// commons-lang & org.apache.commons
+				// Si la dependencia no esta en el core de Liferay, la tendremos que incluir en
+				// nuestro
+				// módulo osgi y tendremos que editar el fichero bnd.bnd.
+				// commons.lang ya se incluye dentro del core de liferay, entonces deberemos de
+				// agregar
+				// commons-csv que no esta incluida en el core de liferay.
+				resourceResponse.setContentType("application/csv");
+				resourceResponse.addProperty(HttpHeaders.CONTENT_DISPOSITION, "attachment: filename=listado.csv");
+				// coger el de liferay
+				// refresh gradle
+				try (OutputStreamWriter osw = new OutputStreamWriter(resourceResponse.getPortletOutputStream());
+						CSVPrinter printer = new CSVPrinter(osw, CSVFormat.DEFAULT.withHeader("num", "cliente", "importe"))) {
+					for (Hashtable<String, String> factura : FACTURAS) {
+						printer.printRecord(factura.get("num"), factura.get("cliente"), factura.get("importe"));
+					}
+					printer.flush();
+				} catch (UnsupportedEncodingException e) {
+					System.out.println(e.getMessage());
+					throw new IOException("Error with encoding", e);
+				}
+
+				super.serveResource(resourceRequest, resourceResponse);
+		
 	}
 	
 	public void altaFactura(ActionRequest actionRequest, ActionResponse actionResponse)
@@ -99,10 +129,31 @@ public class CrudPortlet extends MVCPortlet {
 		
 		Hashtable<String,String> facturaNueva =new Hashtable<String,String>();
 		facturaNueva.put("num", num);
-		facturaNueva.put("cliente", num);
-		facturaNueva.put("importe", num);
+		facturaNueva.put("cliente", cliente);
+		facturaNueva.put("importe", importe);
 		
 		FACTURAS.add(facturaNueva);		
+	}
+	
+	public void modificarFactura(ActionRequest actionRequest, ActionResponse actionResponse)
+			throws IOException, PortletException{
+		
+		String num = actionRequest.getParameter("num").replaceAll(" ", "");
+		String cliente = actionRequest.getParameter("cliente").replaceAll(" ", "");
+		String importe = actionRequest.getParameter("importe").replaceAll(" ", "");
+
+		FACTURAS = FACTURAS.stream().map(f -> {
+			
+			if (f.get("num").equals(num)) {
+				Hashtable<String, String> facturaNueva = new Hashtable<String, String>();
+				facturaNueva.put("num", num);
+				facturaNueva.put("cliente", cliente);
+				facturaNueva.put("importe", importe);
+				return facturaNueva;
+			} else 
+				return f;
+			
+		}).collect(Collectors.toCollection(Vector::new));
 	}
 	
      

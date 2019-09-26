@@ -2,3 +2,5 @@ Bundle-Name: Crud
 Bundle-SymbolicName: com.viewnext.examples
 Bundle-Version: 1.0.0
 Export-Package: com.viewnext.examples.constants
+
+Include-Resource: @commons-csv-1.3.jar
