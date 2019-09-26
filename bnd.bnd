@@ -1,0 +1,4 @@
+Bundle-Name: Crud
+Bundle-SymbolicName: com.viewnext.examples
+Bundle-Version: 1.0.0
+Export-Package: com.viewnext.examples.constants
